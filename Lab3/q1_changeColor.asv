@@ -1,0 +1,39 @@
+clear; clc;
+
+Original_I = imread('flowers.jpg');
+mask = uint8(imread('mask.tif'));
+
+% Part I, swap the R and B values for the pixels in the mask and generate a
+% new image
+J = Original_I .* mask;
+
+% extract rgb channel
+R = J(:,:,1);
+J(:,:,1) = J(:,:,3); % B
+J(:,:,3) = R;
+J = Original_I .* (1-mask) + J;
+
+% HSV
+mask = double(mask);
+hsv_I = rgb2hsv(J);
+mask_hsv_I = hsv_I .* mask;
+% hue value is in [0,1], rotate by multiplying 360 and subtract/add, then
+% scale back to [0,1]
+mask_hue = mask_hsv_I(:,:,1);
+
+rotation = 180;
+rotated_hue = mod((mask_hue .* 360 + rotation) ,360)/360;
+rotated_hue = hsv_I(:,:,1) .*(1-mask) + rotated_hue;
+
+hsv_I(:,:,1) = rotated_hue;
+
+rotated_hsv_I = hsv2rgb(hsv_I);
+
+figure(1);
+imshow([Original_I, J]);
+
+figure(2);
+imshow(rotated_hsv_I);
+
+pause();
+close();
